@@ -124,9 +124,9 @@ function SearchPage() {
                 </button>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <Select value={cityFilter} onValueChange={setCityFilter}>
-                <SelectTrigger className="h-11 w-36 rounded-xl border-input bg-surface text-sm">
+                <SelectTrigger className="h-11 w-36 min-w-[9rem] rounded-xl border-input bg-surface text-sm">
                   <MapPin className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
@@ -135,7 +135,7 @@ function SearchPage() {
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="h-11 w-36 rounded-xl border-input bg-surface text-sm">
+                <SelectTrigger className="h-11 w-36 min-w-[9rem] rounded-xl border-input bg-surface text-sm">
                   <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue />
                 </SelectTrigger>
@@ -145,12 +145,12 @@ function SearchPage() {
               </Select>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-3">
             <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">{filtered.length}</span> results found</p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Sort:</span>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-8 w-40 rounded-lg text-xs border-input bg-surface">
+                <SelectTrigger className="h-8 w-44 rounded-lg text-xs border-input bg-surface">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

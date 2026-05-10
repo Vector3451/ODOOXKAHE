@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, MapPin, Wallet, Calendar, Compass, Loader2, ChevronDown, DollarSign, ArrowLeft, Plus } from "lucide-react";
+import { Sparkles, MapPin, Wallet, Calendar, Compass, Loader2, ChevronDown, DollarSign, ArrowLeft, Plus, SlidersHorizontal } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +50,7 @@ function AIPlannerPage() {
   const [pickedInterests, setPickedInterests] = useState<string[]>(["Photography", "Local food"]);
   const [generating, setGenerating] = useState(false);
   const [itinerary, setItinerary] = useState<any[] | null>(null);
+  const [showSettings, setShowSettings] = useState(true);
 
   const handleGenerate = () => {
     setGenerating(true);
@@ -63,14 +64,25 @@ function AIPlannerPage() {
   return (
     <AppShell>
       <div className="max-w-6xl mx-auto pb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">AI Trip Planner</h1>
-          <p className="mt-2 text-muted-foreground">Our smart algorithms craft a day-by-day itinerary tuned to your style, budget, and interests.</p>
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground">AI Trip Planner</h1>
+          <p className="mt-2 text-muted-foreground text-sm sm:text-base">Our smart algorithms craft a day-by-day itinerary tuned to your style, budget, and interests.</p>
         </div>
 
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Settings Sidebar */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Mobile toggle for settings */}
+            <button
+              className="lg:hidden w-full flex items-center justify-between rounded-2xl bg-card border border-border/60 shadow-card px-5 py-4"
+              onClick={() => setShowSettings(s => !s)}
+            >
+              <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-primary" /> Trip Settings
+              </span>
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showSettings && "rotate-180")} />
+            </button>
+            <div className={cn(showSettings ? "block" : "hidden", "lg:block")}>
             <div className="rounded-2xl bg-card border border-border/60 shadow-card p-6 space-y-6">
               <Field label="Destination" icon={MapPin}>
                 <input 
@@ -144,6 +156,7 @@ function AIPlannerPage() {
                 {generating ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Creating Magic...</> : <><Sparkles className="h-4 w-4 mr-2" /> Generate Itinerary</>}
               </Button>
             </div>
+            </div> {/* close showSettings wrapper */}
           </div>
 
           {/* Results Area */}

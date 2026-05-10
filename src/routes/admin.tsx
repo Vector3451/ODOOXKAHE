@@ -77,7 +77,7 @@ function AdminPage() {
   return (
     <AppShell>
       {/* Admin header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
@@ -85,10 +85,10 @@ function AdminPage() {
             </span>
             <span className="text-xs font-semibold uppercase tracking-wider text-destructive">Admin Panel</span>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Analytics Dashboard</h1>
           <p className="mt-1 text-muted-foreground text-sm">Platform-wide insights and management</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button className="relative h-10 w-10 rounded-xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors">
             <Bell className="h-4 w-4" />
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive" />
@@ -100,7 +100,7 @@ function AdminPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <StatCard icon={Users} label="Total Users" value="12,847" sub="+8.2% this month" color="bg-primary/10 text-primary" />
         <StatCard icon={Plane} label="Active Trips" value="1,243" sub="94 planned today" color="bg-accent/10 text-accent" />
         <StatCard icon={DollarSign} label="Revenue" value="$284K" sub="+12.5% MoM" color="bg-emerald-100 text-emerald-700" />
@@ -190,30 +190,30 @@ function AdminPage() {
 
       {/* Recent users table */}
       <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border">
           <h2 className="font-semibold text-foreground">Recent Users</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               placeholder="Search users..."
-              className="h-9 w-48 rounded-xl border border-input bg-surface pl-8 pr-3 text-xs outline-none focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all"
+              className="h-9 w-full sm:w-48 rounded-xl border border-input bg-surface pl-8 pr-3 text-xs outline-none focus:border-primary focus:ring-4 focus:ring-primary/15 transition-all"
             />
           </div>
         </div>
         <div className="divide-y divide-border">
           {recentUsers.map((u) => (
-            <div key={u.email} className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-gradient-hero flex items-center justify-center text-primary-foreground text-xs font-bold">
+            <div key={u.email} className="flex items-center justify-between px-4 sm:px-6 py-4 hover:bg-muted/30 transition-colors gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-hero flex items-center justify-center text-primary-foreground text-xs font-bold">
                   {u.name.split(" ").map((n) => n[0]).join("")}
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{u.name}</p>
-                  <p className="text-xs text-muted-foreground">{u.email}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{u.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-muted-foreground">{u.trips} trips</span>
+              <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                <span className="hidden sm:inline text-xs text-muted-foreground">{u.trips} trips</span>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                   u.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-destructive/10 text-destructive"
                 }`}>

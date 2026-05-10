@@ -60,7 +60,7 @@ function MapPage() {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden h-[600px] relative">
+          <div className="lg:col-span-3 rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden h-[50vh] sm:h-[500px] lg:h-[600px] relative">
             {!Leaflet ? (
               <div className="h-full w-full flex items-center justify-center bg-slate-50">
                 <div className="text-center">

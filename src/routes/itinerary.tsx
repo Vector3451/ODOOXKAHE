@@ -137,6 +137,7 @@ function ItineraryPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [costFilter, setCostFilter] = useState("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [mobilePane, setMobilePane] = useState<"activities" | "timeline">("timeline");
 
   const filtered = discoveredActivities.filter((a) => {
     if (search && !a.title.toLowerCase().includes(search.toLowerCase()) && !a.city.toLowerCase().includes(search.toLowerCase())) return false;
@@ -197,16 +198,38 @@ function ItineraryPage() {
     <AppShell>
       <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Trip Itinerary</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Trip Itinerary</h1>
           <p className="mt-1 inline-flex items-center gap-2 text-muted-foreground">
             <CalendarIcon className="h-4 w-4" /> Jun 12 — Jun 22, 2026 · {stops.length} stops
           </p>
         </div>
       </header>
 
+      {/* Mobile pane switcher */}
+      <div className="lg:hidden flex rounded-xl bg-muted p-1 mb-4">
+        <button
+          onClick={() => setMobilePane("timeline")}
+          className={cn(
+            "flex-1 rounded-lg py-2 text-sm font-semibold transition-all",
+            mobilePane === "timeline" ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Timeline
+        </button>
+        <button
+          onClick={() => setMobilePane("activities")}
+          className={cn(
+            "flex-1 rounded-lg py-2 text-sm font-semibold transition-all",
+            mobilePane === "activities" ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Activities
+        </button>
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
         {/* LEFT PANE — Builder / Search */}
-        <aside className="flex flex-col gap-4">
+        <aside className={cn("flex flex-col gap-4", mobilePane === "timeline" ? "hidden lg:flex" : "flex")}>
           <div className="sticky top-20 z-10 rounded-2xl border border-border/60 bg-card p-4 shadow-card">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -298,7 +321,7 @@ function ItineraryPage() {
         </aside>
 
         {/* RIGHT PANE — Timeline */}
-        <section className="flex flex-col gap-5">
+        <section className={cn("flex flex-col gap-5", mobilePane === "activities" ? "hidden lg:flex" : "flex")}>
           {/* View toggle */}
           <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-2 shadow-card">
             <p className="pl-3 text-sm font-semibold text-foreground">Timeline</p>
