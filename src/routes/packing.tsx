@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   CheckSquare, Square, ChevronDown, ChevronUp,
-  FileText, Shirt, Laptop, Plus, Trash2,
+  FileText, Shirt, Laptop, Plus, Trash2, Package,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/packing")({
   head: () => ({
@@ -17,230 +18,210 @@ export const Route = createFileRoute("/packing")({
   component: PackingPage,
 });
 
-type CheckItem = { id: string; label: string; checked: boolean };
-type Category = { id: string; name: string; icon: React.ComponentType<{ className?: string }>; color: string; items: CheckItem[] };
+type Item = { id: string; label: string; checked: boolean };
+type Category = { id: string; name: string; icon: React.ComponentType<{ className?: string }>; color: string; bg: string; items: Item[] };
 
-const initialCategories: Category[] = [
+const init: Category[] = [
   {
-    id: "docs", name: "Documents", icon: FileText, color: "text-primary bg-primary/10",
+    id: "docs", name: "Documents", icon: FileText,
+    color: "text-blue-600", bg: "bg-blue-50",
     items: [
-      { id: "d1", label: "Passport", checked: true },
-      { id: "d2", label: "Travel insurance", checked: true },
+      { id: "d1", label: "Passport",                         checked: true  },
+      { id: "d2", label: "Travel insurance",                 checked: true  },
       { id: "d3", label: "Flight tickets (printed/digital)", checked: false },
-      { id: "d4", label: "Hotel reservations", checked: false },
-      { id: "d5", label: "Visa documents", checked: false },
-      { id: "d6", label: "Emergency contacts", checked: true },
+      { id: "d4", label: "Hotel reservations",               checked: false },
+      { id: "d5", label: "Visa documents",                   checked: false },
+      { id: "d6", label: "Emergency contacts",               checked: true  },
     ],
   },
   {
-    id: "clothing", name: "Clothing", icon: Shirt, color: "text-accent bg-accent/10",
+    id: "clothing", name: "Clothing", icon: Shirt,
+    color: "text-orange-500", bg: "bg-orange-50",
     items: [
-      { id: "c1", label: "T-shirts (5×)", checked: false },
-      { id: "c2", label: "Jeans / Trousers", checked: false },
-      { id: "c3", label: "Underwear & socks", checked: false },
-      { id: "c4", label: "Jacket / Raincoat", checked: true },
-      { id: "c5", label: "Swimwear", checked: false },
-      { id: "c6", label: "Comfortable walking shoes", checked: true },
-      { id: "c7", label: "Sandals", checked: false },
+      { id: "c1", label: "T-shirts (5×)",             checked: false },
+      { id: "c2", label: "Jeans / Trousers",          checked: false },
+      { id: "c3", label: "Underwear & socks",          checked: false },
+      { id: "c4", label: "Jacket / Raincoat",          checked: true  },
+      { id: "c5", label: "Swimwear",                   checked: false },
+      { id: "c6", label: "Comfortable walking shoes",  checked: true  },
+      { id: "c7", label: "Sandals",                    checked: false },
     ],
   },
   {
-    id: "electronics", name: "Electronics", icon: Laptop, color: "text-violet-600 bg-violet-100",
+    id: "electronics", name: "Electronics", icon: Laptop,
+    color: "text-purple-600", bg: "bg-purple-50",
     items: [
-      { id: "e1", label: "Phone + charger", checked: true },
-      { id: "e2", label: "Laptop + adapter", checked: false },
-      { id: "e3", label: "Universal power adapter", checked: true },
-      { id: "e4", label: "Portable power bank", checked: false },
-      { id: "e5", label: "Camera + memory cards", checked: false },
-      { id: "e6", label: "Headphones", checked: true },
+      { id: "e1", label: "Phone + charger",            checked: true  },
+      { id: "e2", label: "Laptop + charger",           checked: false },
+      { id: "e3", label: "Universal power adapter",    checked: false },
+      { id: "e4", label: "Portable power bank",        checked: true  },
+      { id: "e5", label: "Camera + memory cards",      checked: false },
+      { id: "e6", label: "Earphones / AirPods",        checked: false },
+    ],
+  },
+  {
+    id: "misc", name: "Essentials", icon: Package,
+    color: "text-green-600", bg: "bg-green-50",
+    items: [
+      { id: "m1", label: "Sunscreen SPF 50+",          checked: false },
+      { id: "m2", label: "Medications / first aid kit",checked: false },
+      { id: "m3", label: "Reusable water bottle",      checked: true  },
+      { id: "m4", label: "Travel pillow",              checked: false },
     ],
   },
 ];
 
-function CategorySection({ cat, onToggle, onAdd, onRemove }: {
-  cat: Category;
-  onToggle: (catId: string, itemId: string) => void;
-  onAdd: (catId: string, label: string) => void;
-  onRemove: (catId: string, itemId: string) => void;
-}) {
-  const [open, setOpen] = useState(true);
-  const [newLabel, setNewLabel] = useState("");
-  const Icon = cat.icon;
-  const checked = cat.items.filter((i) => i.checked).length;
-  const total = cat.items.length;
-  const pct = total === 0 ? 0 : Math.round((checked / total) * 100);
-
-  const handleAdd = () => {
-    if (newLabel.trim()) { onAdd(cat.id, newLabel.trim()); setNewLabel(""); }
-  };
-
-  return (
-    <div className="rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden">
-      {/* Header */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-5 py-4 border-b border-border bg-muted/30 hover:bg-muted/50 transition-colors text-left"
-      >
-        <span className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${cat.color}`}>
-          <Icon className="h-4 w-4" />
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-foreground">{cat.name}</span>
-            <span className="text-xs font-medium text-muted-foreground">{checked}/{total}</span>
-          </div>
-          {/* Progress bar */}
-          <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${pct === 100 ? "bg-emerald-500" : "bg-primary"}`}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-        <span className="text-xs font-bold ml-2 text-muted-foreground">{pct}%</span>
-        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-      </button>
-
-      {open && (
-        <div className="p-4 space-y-1">
-          {cat.items.map((item) => (
-            <div key={item.id} className="group flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-muted/40 transition-colors">
-              <button
-                onClick={() => onToggle(cat.id, item.id)}
-                className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
-                aria-label={item.checked ? "Uncheck" : "Check"}
-              >
-                {item.checked
-                  ? <CheckSquare className="h-5 w-5 text-primary fill-primary/15" />
-                  : <Square className="h-5 w-5" />}
-              </button>
-              <span className={`flex-1 text-sm ${item.checked ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                {item.label}
-              </span>
-              <button
-                onClick={() => onRemove(cat.id, item.id)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                aria-label="Remove item"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
-          {/* Quick add */}
-          <div className="flex gap-2 mt-3 pt-3 border-t border-border">
-            <input
-              value={newLabel}
-              onChange={(e) => setNewLabel(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="Add item..."
-              className="flex-1 h-9 rounded-xl border border-input bg-surface px-3 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15"
-            />
-            <Button size="sm" onClick={handleAdd} className="h-9 px-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function PackingPage() {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [cats, setCats]           = useState<Category[]>(init);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const newItemRefs               = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const toggleItem = (catId: string, itemId: string) => {
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id !== catId ? c : {
-          ...c,
-          items: c.items.map((i) => i.id !== itemId ? i : { ...i, checked: !i.checked }),
-        },
-      ),
-    );
+  const total   = cats.reduce((s, c) => s + c.items.length, 0);
+  const packed  = cats.reduce((s, c) => s + c.items.filter((i) => i.checked).length, 0);
+  const pct     = total === 0 ? 0 : Math.round((packed / total) * 100);
+
+  const toggle = (catId: string, itemId: string) => {
+    setCats((prev) => prev.map((c) =>
+      c.id !== catId ? c : { ...c, items: c.items.map((i) => i.id !== itemId ? i : { ...i, checked: !i.checked }) }
+    ));
   };
 
-  const addItem = (catId: string, label: string) => {
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id !== catId ? c : {
-          ...c,
-          items: [...c.items, { id: Date.now().toString(), label, checked: false }],
-        },
-      ),
-    );
+  const remove = (catId: string, itemId: string) => {
+    setCats((prev) => prev.map((c) =>
+      c.id !== catId ? c : { ...c, items: c.items.filter((i) => i.id !== itemId) }
+    ));
   };
 
-  const removeItem = (catId: string, itemId: string) => {
-    setCategories((prev) =>
-      prev.map((c) =>
-        c.id !== catId ? c : { ...c, items: c.items.filter((i) => i.id !== itemId) },
-      ),
-    );
+  const addItem = (catId: string) => {
+    const input = newItemRefs.current[catId];
+    if (!input || !input.value.trim()) return;
+    const label = input.value.trim();
+    setCats((prev) => prev.map((c) =>
+      c.id !== catId ? c : { ...c, items: [...c.items, { id: `${catId}-${Date.now()}`, label, checked: false }] }
+    ));
+    input.value = "";
   };
 
-  const totalItems = categories.reduce((s, c) => s + c.items.length, 0);
-  const checkedItems = categories.reduce((s, c) => s + c.items.filter((i) => i.checked).length, 0);
-  const overallPct = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
+  const resetAll = () => setCats((prev) => prev.map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, checked: false })) })));
 
   return (
     <AppShell>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Packing Checklist</h1>
-        <p className="mt-1.5 text-muted-foreground text-sm">Santorini Escape · Jun 12 – Jun 19, 2026</p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Packing Checklist</h1>
+          <p className="mt-1 text-slate-400 text-sm">Santorini Escape · Jun 12 – Jun 19, 2026</p>
+        </div>
+        <Button onClick={resetAll} variant="outline" className="h-9 rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold">
+          Reset All
+        </Button>
       </div>
 
-      {/* Overall progress */}
-      <div className="rounded-2xl bg-gradient-hero p-6 text-primary-foreground shadow-elevated mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider opacity-80">Overall Progress</p>
-            <p className="text-4xl font-bold mt-1">{overallPct}%</p>
+      {/* Sticky progress bar */}
+      <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-card px-5 py-4 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-900">Packing Progress</span>
+            <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${pct === 100 ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>
+              {pct === 100 ? "All Packed! 🎉" : `${packed} / ${total} items`}
+            </span>
           </div>
-          <div className="text-right">
-            <p className="text-xs opacity-80">Items packed</p>
-            <p className="text-3xl font-bold">{checkedItems}<span className="text-lg opacity-70">/{totalItems}</span></p>
-          </div>
+          <span className={`text-lg font-bold tabular-nums ${pct === 100 ? "text-green-600" : pct > 60 ? "text-orange-500" : "text-blue-600"}`}>
+            {pct}%
+          </span>
         </div>
-        <div className="h-3 rounded-full bg-primary-foreground/20 overflow-hidden">
+        <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${overallPct === 100 ? "bg-emerald-400" : "bg-primary-foreground"}`}
-            style={{ width: `${overallPct}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${pct}%`,
+              background: pct === 100 ? "#22c55e" : pct > 75 ? "#f97316" : "#2563eb",
+            }}
           />
         </div>
-        {overallPct === 100 && (
-          <p className="mt-2 text-sm font-semibold text-primary-foreground/90">🎉 You're all packed! Have a great trip!</p>
-        )}
       </div>
 
-      {/* Category summary pills */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        {categories.map((c) => {
-          const checked = c.items.filter((i) => i.checked).length;
-          const Icon = c.icon;
+      {/* Accordion categories */}
+      <div className="space-y-3">
+        {cats.map((cat) => {
+          const Icon     = cat.icon;
+          const isOpen   = !collapsed[cat.id];
+          const catPacked = cat.items.filter((i) => i.checked).length;
           return (
-            <div key={c.id} className="rounded-2xl bg-card border border-border/60 shadow-card p-4 text-center">
-              <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${c.color} mb-2`}>
-                <Icon className="h-4 w-4" />
-              </span>
-              <p className="text-sm font-semibold text-foreground">{c.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{checked}/{c.items.length}</p>
+            <div key={cat.id} className="rounded-2xl border border-slate-200 bg-white shadow-card overflow-hidden">
+              {/* Section header */}
+              <button
+                onClick={() => setCollapsed((c) => ({ ...c, [cat.id]: !c[cat.id] }))}
+                className="flex w-full items-center justify-between px-5 py-4 bg-slate-50 hover:bg-slate-100 transition-colors text-left">
+                <div className="flex items-center gap-3">
+                  <span className={cn("flex h-9 w-9 items-center justify-center rounded-xl", cat.bg, cat.color)}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{cat.name}</p>
+                    <p className="text-xs text-slate-400">
+                      <span className="tabular-nums">{catPacked}</span> / <span className="tabular-nums">{cat.items.length}</span> packed
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* mini progress */}
+                  <div className="w-16 h-1.5 rounded-full bg-slate-200 overflow-hidden hidden sm:block">
+                    <div className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${cat.items.length ? (catPacked / cat.items.length) * 100 : 0}%` }} />
+                  </div>
+                  {isOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </div>
+              </button>
+
+              {isOpen && (
+                <div className="px-5 pb-4 pt-2 space-y-1.5">
+                  {cat.items.map((item) => (
+                    <div key={item.id}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
+                        item.checked ? "bg-slate-50 scale-[0.99]" : "bg-white hover:bg-slate-50"
+                      )}>
+                      {/* Checkbox */}
+                      <button onClick={() => toggle(cat.id, item.id)} className="shrink-0">
+                        {item.checked
+                          ? <CheckSquare className="h-5 w-5 text-blue-600" />
+                          : <Square className="h-5 w-5 text-slate-300 hover:text-blue-400 transition-colors" />}
+                      </button>
+                      {/* Label */}
+                      <span className={cn(
+                        "flex-1 text-sm transition-all duration-200",
+                        item.checked ? "line-through text-slate-400" : "text-slate-800 font-medium"
+                      )}>
+                        {item.label}
+                      </span>
+                      {/* Delete */}
+                      <button onClick={() => remove(cat.id, item.id)}
+                        className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all shrink-0">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add item row */}
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                    <input
+                      ref={(el) => { newItemRefs.current[cat.id] = el; }}
+                      type="text"
+                      placeholder="Add item..."
+                      onKeyDown={(e) => e.key === "Enter" && addItem(cat.id)}
+                      className="flex-1 h-8 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 placeholder-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                    />
+                    <button onClick={() => addItem(cat.id)}
+                      className="h-8 w-8 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-colors shrink-0">
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
-      </div>
-
-      {/* Category lists */}
-      <div className="space-y-5">
-        {categories.map((c) => (
-          <CategorySection
-            key={c.id}
-            cat={c}
-            onToggle={toggleItem}
-            onAdd={addItem}
-            onRemove={removeItem}
-          />
-        ))}
       </div>
     </AppShell>
   );
