@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Users, TrendingUp, Plane, DollarSign, Globe,
   BarChart2, PieChart, Activity, Settings, Shield,
-  Search, Bell, ChevronRight,
+  Search, Bell, ChevronRight, Loader2
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import {
@@ -10,6 +10,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   BarChart, Bar, Legend,
 } from "recharts";
+import { useEffect, useState } from "react";
+import { adminAPI } from "@/lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -21,42 +24,11 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-// ── Mock data ──────────────────────────────────────────────────────
-const pieData = [
-  { name: "Beach", value: 35 },
-  { name: "City", value: 28 },
-  { name: "Adventure", value: 20 },
-  { name: "Cultural", value: 17 },
-];
 const PIE_COLORS = ["#4f8ef7", "#f97316", "#10b981", "#8b5cf6"];
-
-const lineData = [
-  { month: "Jan", trips: 120, users: 200 },
-  { month: "Feb", trips: 185, users: 310 },
-  { month: "Mar", trips: 240, users: 420 },
-  { month: "Apr", trips: 190, users: 390 },
-  { month: "May", trips: 320, users: 560 },
-  { month: "Jun", trips: 410, users: 680 },
-];
-
-const barData = [
-  { region: "Europe", trips: 420, revenue: 82000 },
-  { region: "Asia", trips: 310, revenue: 61000 },
-  { region: "Americas", trips: 280, revenue: 54000 },
-  { region: "Oceania", trips: 140, revenue: 31000 },
-  { region: "Africa", trips: 90, revenue: 18000 },
-];
-
-const recentUsers = [
-  { name: "Alex Johnson", email: "alex@email.com", trips: 8, status: "Active" },
-  { name: "Sarah Chen", email: "sarah@email.com", trips: 3, status: "Active" },
-  { name: "Marco Rossi", email: "marco@email.com", trips: 12, status: "Suspended" },
-  { name: "Priya Sharma", email: "priya@email.com", trips: 5, status: "Active" },
-];
 
 function StatCard({ icon: Icon, label, value, sub, color }: {
   icon: React.ComponentType<{ className?: string }>;
-  label: string; value: string; sub: string; color: string;
+  label: string; value: string | number; sub: string; color: string;
 }) {
   return (
     <div className="rounded-2xl bg-card border border-border/60 shadow-card p-5 hover:shadow-elevated transition-shadow">
@@ -74,6 +46,55 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
 }
 
 function AdminPage() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    // Basic Role Check from localStorage
+    const userStr = typeof window !== "undefined" ? localStorage.getItem('user') : null;
+    if (!userStr) {
+      navigate({ to: '/login' });
+      return;
+    }
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin') {
+        toast.error("Access Denied. Admin privileges required.");
+        navigate({ to: '/dashboard' });
+        return;
+      }
+    } catch (e) {
+      navigate({ to: '/login' });
+      return;
+    }
+
+    const fetchAnalytics = async () => {
+      try {
+        const res = await adminAPI.getAnalytics();
+        setData(res);
+      } catch (error) {
+        toast.error("Failed to load admin analytics");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, [navigate]);
+
+  if (loading || !data) {
+    return (
+      <AppShell>
+        <div className="flex h-[80vh] items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Verifying secure connection...</p>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       {/* Admin header */}
@@ -101,10 +122,10 @@ function AdminPage() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={Users} label="Total Users" value="12,847" sub="+8.2% this month" color="bg-primary/10 text-primary" />
-        <StatCard icon={Plane} label="Active Trips" value="1,243" sub="94 planned today" color="bg-accent/10 text-accent" />
-        <StatCard icon={DollarSign} label="Revenue" value="$284K" sub="+12.5% MoM" color="bg-emerald-100 text-emerald-700" />
-        <StatCard icon={Globe} label="Countries" value="87" sub="Destination coverage" color="bg-violet-100 text-violet-700" />
+        <StatCard icon={Users} label="Total Users" value={data.stats.totalUsers} sub="Platform members" color="bg-primary/10 text-primary" />
+        <StatCard icon={Plane} label="Active Trips" value={data.stats.activeTrips} sub="Trips in upcoming status" color="bg-accent/10 text-accent" />
+        <StatCard icon={DollarSign} label="Managed Budgets" value={`$${data.stats.revenue.toLocaleString()}`} sub="Total trip budgets" color="bg-emerald-100 text-emerald-700" />
+        <StatCard icon={Globe} label="Countries" value={data.stats.countries} sub="Destination coverage" color="bg-violet-100 text-violet-700" />
       </div>
 
       {/* Charts row 1: Pie + Line */}
@@ -113,13 +134,13 @@ function AdminPage() {
         <div className="rounded-2xl bg-card border border-border/60 shadow-card p-6">
           <div className="flex items-center gap-2 mb-1">
             <PieChart className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold text-foreground">Trip Category Distribution</h2>
+            <h2 className="font-semibold text-foreground">Trip Status Distribution</h2>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Share of trips by travel type</p>
+          <p className="text-xs text-muted-foreground mb-4">Share of trips by status</p>
           <ResponsiveContainer width="100%" height={220}>
             <RechartsPie>
               <Pie
-                data={pieData}
+                data={data.pieData}
                 cx="50%"
                 cy="50%"
                 outerRadius={90}
@@ -129,7 +150,7 @@ function AdminPage() {
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 labelLine={false}
               >
-                {pieData.map((_, i) => (
+                {data.pieData.map((_: any, i: number) => (
                   <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                 ))}
               </Pie>
@@ -137,9 +158,9 @@ function AdminPage() {
             </RechartsPie>
           </ResponsiveContainer>
           <div className="flex flex-wrap gap-3 mt-3 justify-center">
-            {pieData.map((d, i) => (
+            {data.pieData.map((d: any, i: number) => (
               <div key={d.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: PIE_COLORS[i] }} />
+                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                 {d.name}
               </div>
             ))}
@@ -154,7 +175,7 @@ function AdminPage() {
           </div>
           <p className="text-xs text-muted-foreground mb-4">Monthly users and trips created</p>
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={lineData} margin={{ left: -20, right: 10 }}>
+            <LineChart data={data.lineData} margin={{ left: -20, right: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -175,7 +196,7 @@ function AdminPage() {
         </div>
         <p className="text-xs text-muted-foreground mb-4">Trips and estimated revenue by region</p>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={barData} margin={{ left: -10 }}>
+          <BarChart data={data.barData} margin={{ left: -10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="region" tick={{ fontSize: 11 }} />
             <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
@@ -201,11 +222,11 @@ function AdminPage() {
           </div>
         </div>
         <div className="divide-y divide-border">
-          {recentUsers.map((u) => (
+          {data.recentUsers.map((u: any) => (
             <div key={u.email} className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-gradient-hero flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  {u.name.split(" ").map((n) => n[0]).join("")}
+                  {u.name.split(" ").map((n: string) => n[0]).join("")}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{u.name}</p>
@@ -215,7 +236,7 @@ function AdminPage() {
               <div className="flex items-center gap-4">
                 <span className="text-xs text-muted-foreground">{u.trips} trips</span>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                  u.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-destructive/10 text-destructive"
+                  u.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
                 }`}>
                   {u.status}
                 </span>

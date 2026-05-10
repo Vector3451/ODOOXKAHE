@@ -17,6 +17,9 @@ export const Route = createFileRoute("/invoice")({
   component: InvoicePage,
 });
 
+import { useQuery } from "@tanstack/react-query";
+import { tripAPI, expenseAPI } from "@/lib/api";
+
 type ExpenseRow = {
   id: string;
   date: string;
@@ -25,27 +28,32 @@ type ExpenseRow = {
   city: string;
   unitCost: number;
   qty: number;
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor: string;
 };
 
-const expenses: ExpenseRow[] = [
-  { id: "e1", date: "Jun 12", description: "Flights: SFO → ATH (Round trip)", category: "Transport", city: "San Francisco", unitCost: 980, qty: 1, icon: Plane, iconColor: "text-primary bg-primary/10" },
-  { id: "e2", date: "Jun 12", description: "Hotel Oia Palace — 4 nights", category: "Accommodation", city: "Santorini", unitCost: 280, qty: 4, icon: Hotel, iconColor: "text-violet-600 bg-violet-100" },
-  { id: "e3", date: "Jun 13", description: "Sunset Catamaran Cruise", category: "Activity", city: "Santorini", unitCost: 95, qty: 2, icon: Camera, iconColor: "text-emerald-600 bg-emerald-100" },
-  { id: "e4", date: "Jun 14", description: "Fine Dining at Ammoudi Bay", category: "Food", city: "Santorini", unitCost: 120, qty: 1, icon: Utensils, iconColor: "text-accent bg-accent/10" },
-  { id: "e5", date: "Jun 14", description: "Winery Tour — Santo Wines", category: "Activity", city: "Santorini", unitCost: 65, qty: 2, icon: Camera, iconColor: "text-emerald-600 bg-emerald-100" },
-  { id: "e6", date: "Jun 15", description: "Ferry: Santorini → Athens", category: "Transport", city: "Santorini", unitCost: 42, qty: 2, icon: Bus, iconColor: "text-primary bg-primary/10" },
-  { id: "e7", date: "Jun 15", description: "Hotel Plaka, Athens — 3 nights", category: "Accommodation", city: "Athens", unitCost: 185, qty: 3, icon: Hotel, iconColor: "text-violet-600 bg-violet-100" },
-  { id: "e8", date: "Jun 16", description: "Acropolis + Museum Tickets", category: "Activity", city: "Athens", unitCost: 38, qty: 2, icon: Camera, iconColor: "text-emerald-600 bg-emerald-100" },
-  { id: "e9", date: "Jun 17", description: "Restaurant meals (est.)", category: "Food", city: "Athens", unitCost: 45, qty: 6, icon: Utensils, iconColor: "text-accent bg-accent/10" },
-];
-
-const BUDGET_TOTAL = 3200;
-const TAX_RATE = 0.08;
+const iconMap: Record<string, any> = {
+  Transport: { icon: Plane, color: "text-primary bg-primary/10" },
+  Accommodation: { icon: Hotel, color: "text-violet-600 bg-violet-100" },
+  Activity: { icon: Camera, color: "text-emerald-600 bg-emerald-100" },
+  Food: { icon: Utensils, color: "text-accent bg-accent/10" },
+};
 
 function InvoicePage() {
-  const subtotal = expenses.reduce((s, e) => s + e.unitCost * e.qty, 0);
+  const { data: tripData } = useQuery({ queryKey: ["trips"], queryFn: () => tripAPI.getAll() });
+  const trip = tripData?.trips?.find((t: any) => t.status === "upcoming") || tripData?.trips?.[0];
+  const tripId = trip?.id;
+
+  const { data: expenseData } = useQuery({
+    queryKey: ["expenses", tripId],
+    queryFn: () => expenseAPI.getForTrip(tripId),
+    enabled: !!tripId
+  });
+
+  const expenses: ExpenseRow[] = expenseData?.expenses || [];
+  
+  const BUDGET_TOTAL = trip?.totalBudget || 0;
+  const TAX_RATE = 0.08;
+
+  const subtotal = expenses.reduce((s, e) => s + (e.unitCost || 0) * (e.qty || 1), 0);
   const tax = Math.round(subtotal * TAX_RATE);
   const total = subtotal + tax;
   const budgetDiff = BUDGET_TOTAL - total;
@@ -54,8 +62,20 @@ function InvoicePage() {
   // Category breakdown for budget insights
   const byCategory: Record<string, number> = {};
   expenses.forEach((e) => {
-    byCategory[e.category] = (byCategory[e.category] ?? 0) + e.unitCost * e.qty;
+    byCategory[e.category] = (byCategory[e.category] ?? 0) + (e.unitCost || 0) * (e.qty || 1);
   });
+
+  const tripName = trip?.title || "Upcoming Trip";
+  const tripDates = trip?.startDate && trip?.endDate 
+    ? `${trip.startDate.split('T')[0]} – ${trip.endDate.split('T')[0]}`
+    : "Dates TBD";
+  
+  // Format invoice number
+  const invNumber = `TL-${new Date().getFullYear()}-${String(tripId || 1).padStart(4, '0')}`;
+  
+  // Get user details
+  const userStr = typeof window !== "undefined" ? localStorage.getItem('user') : null;
+  const user = userStr ? JSON.parse(userStr) : { name: "Explorer", email: "explorer@traveloop.io" };
 
   return (
     <AppShell>
@@ -63,7 +83,7 @@ function InvoicePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Expense Invoice</h1>
-          <p className="mt-1.5 text-muted-foreground text-sm">Santorini Escape · Jun 12 – Jun 19, 2026</p>
+          <p className="mt-1.5 text-muted-foreground text-sm">{tripName} · {tripDates}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="h-10 rounded-xl gap-2 border-border">
@@ -80,13 +100,13 @@ function InvoicePage() {
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider opacity-80">Invoice #</p>
-            <p className="text-lg font-bold mt-0.5">TL-2026-0142</p>
-            <p className="text-xs opacity-70 mt-1">Issued: May 10, 2026</p>
+            <p className="text-lg font-bold mt-0.5">{invNumber}</p>
+            <p className="text-xs opacity-70 mt-1">Issued: {new Date().toLocaleDateString()}</p>
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wider opacity-80">Traveller</p>
-            <p className="text-lg font-bold mt-0.5">Alex Johnson</p>
-            <p className="text-xs opacity-70 mt-1">alex.johnson@email.com</p>
+            <p className="text-lg font-bold mt-0.5">{user.name}</p>
+            <p className="text-xs opacity-70 mt-1">{user.email || "No email provided"}</p>
           </div>
           <div className="text-right">
             <p className="text-xs font-medium uppercase tracking-wider opacity-80">Total Amount</p>
@@ -117,14 +137,15 @@ function InvoicePage() {
           {/* Rows */}
           <div className="divide-y divide-border">
             {expenses.map((e) => {
-              const Icon = e.icon;
-              const rowTotal = e.unitCost * e.qty;
+              const iconData = iconMap[e.category] || { icon: AlertCircle, color: "text-slate-600 bg-slate-100" };
+              const Icon = iconData.icon;
+              const rowTotal = (e.unitCost || 0) * (e.qty || 1);
               return (
                 <div key={e.id} className="px-5 py-4 hover:bg-muted/20 transition-colors">
                   <div className="sm:hidden">
                     {/* Mobile layout */}
                     <div className="flex items-center gap-3 mb-1">
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs ${e.iconColor}`}>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs ${iconData.color}`}>
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="flex-1 min-w-0">
@@ -136,12 +157,12 @@ function InvoicePage() {
                   </div>
                   <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 items-center">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${e.iconColor}`}>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconData.color}`}>
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{e.description}</p>
-                        <p className="text-xs text-muted-foreground">{e.date} · Qty: {e.qty}</p>
+                        <p className="text-xs text-muted-foreground">{e.date} · Qty: {e.qty || 1}</p>
                       </div>
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{e.category}</span>

@@ -432,3 +432,28 @@ class AuditLog(db.Model):
             'ip_address':     self.ip_address,
             'created_at':     self.created_at.isoformat() if self.created_at else None,
         }
+
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    trip_id = db.Column(db.Integer, db.ForeignKey('trip.id'), nullable=False)
+    date = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    unit_cost = db.Column(db.Float, nullable=False)
+    qty = db.Column(db.Integer, default=1)
+    
+    trip = db.relationship('Trip', backref='expenses')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'tripId': self.trip_id,
+            'date': self.date,
+            'description': self.description,
+            'category': self.category,
+            'city': self.city,
+            'unitCost': self.unit_cost,
+            'qty': self.qty
+        }
+

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckSquare, Square, ChevronDown, ChevronUp,
   FileText, Shirt, Laptop, Plus, Trash2,
@@ -145,8 +145,36 @@ function CategorySection({ cat, onToggle, onAdd, onRemove }: {
   );
 }
 
+import { useQuery } from "@tanstack/react-query";
+import { tripAPI } from "@/lib/api";
+
 function PackingPage() {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const { data: tripData } = useQuery({ queryKey: ["trips"], queryFn: () => tripAPI.getAll() });
+  
+  // Find the first upcoming trip, or fallback to the most recent one
+  const trip = tripData?.trips?.find((t: any) => t.status === "upcoming") || tripData?.trips?.[0];
+  
+  const tripName = trip?.title || "Upcoming Trip";
+  const tripDates = trip?.startDate && trip?.endDate 
+    ? `${trip.startDate.split('T')[0]} – ${trip.endDate.split('T')[0]}`
+    : "Dates TBD";
+
+  // Use trip ID for localStorage key to persist packing list per trip
+  const storageKey = `packing_${trip?.id || 'default'}`;
+  const [categories, setCategories] = useState<Category[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return JSON.parse(saved);
+    }
+    return initialCategories.map(c => ({...c, items: c.items.map(i => ({...i, checked: false}))}));
+  });
+
+  // Save to localStorage whenever categories change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(categories));
+    }
+  }, [categories, storageKey]);
 
   const toggleItem = (catId: string, itemId: string) => {
     setCategories((prev) =>
@@ -187,7 +215,7 @@ function PackingPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Packing Checklist</h1>
-        <p className="mt-1.5 text-muted-foreground text-sm">Santorini Escape · Jun 12 – Jun 19, 2026</p>
+        <p className="mt-1.5 text-muted-foreground text-sm">{tripName} · {tripDates}</p>
       </div>
 
       {/* Overall progress */}
