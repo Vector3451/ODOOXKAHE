@@ -391,3 +391,178 @@ Traveloop consists of **14 comprehensive screens**, each designed to cover a spe
 ## 🗄️ Database Architecture
 
 Traveloop is powered by a **well-designed relational database** that stores and retrieves complex, interconnected travel data efficiently.
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Users   │────▶│  Trips   │────▶│  Stops   │
+└──────────┘     └──────────┘     └──────────┘
+                                       │
+                      ┌────────────────┼────────────────┐
+                      ▼                ▼                 ▼
+               ┌────────────┐  ┌────────────┐  ┌────────────┐
+               │ Activities │  │  Expenses  │  │   Notes    │
+               └────────────┘  └────────────┘  └────────────┘
+```
+
+| Table | Description |
+|:------|:------------|
+| 👤 `Users` | Stores user accounts, profile info, and preferences |
+| ✈️ `Trips` | Each trip created by a user, with name, dates, and budget |
+| 📍 `Stops` | Individual city stops linked to a trip, with order and date range |
+| 🎭 `Activities` | Activities assigned to each stop, with cost and duration |
+| 💰 `Expenses` | Financial entries linked to stops (transport, stay, meals, etc.) |
+| 📝 `Notes` | User-written notes tied to a specific trip or stop |
+
+---
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+### 🖥️ Frontend
+
+![React](https://img.shields.io/badge/React.js-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![shadcn](https://img.shields.io/badge/shadcn/ui-000000?style=for-the-badge&logo=shadcnui&logoColor=white)
+![Radix](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)
+![Lucide](https://img.shields.io/badge/Lucide_Icons-f97316?style=for-the-badge)
+![Recharts](https://img.shields.io/badge/Recharts-22c55e?style=for-the-badge&logo=chart.js&logoColor=white)
+
+</div>
+
+| Layer | Technology | Role |
+|:------|:-----------|:-----|
+| ⚛️ **Framework** | React.js + Vite | Component-based UI with fast HMR development |
+| 🎨 **Styling** | Tailwind CSS | Utility-first responsive design system |
+| 🧩 **UI Components** | shadcn/ui + Radix Primitives | Accessible, composable UI building blocks |
+| 🖼️ **Icons** | Lucide React | Clean, consistent icon library |
+| 📊 **Charts** | Recharts | Interactive pie, bar, and donut chart visualizations |
+| 🔄 **State Management** | React Hooks + Context API | `useState`, `useEffect`, and shared global state |
+
+<div align="center">
+
+### 🗃️ Backend & Database
+
+![Odoo](https://img.shields.io/badge/Odoo_Integration-714B67?style=for-the-badge&logo=odoo&logoColor=white)
+![REST](https://img.shields.io/badge/RESTful_API-FF6B6B?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/Relational_Database-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+
+</div>
+
+| Layer | Technology | Role |
+|:------|:-----------|:-----|
+| 🏗️ **Infrastructure** | Odoo Integration | Backend business logic and data management |
+| 🔌 **API** | RESTful Endpoints | Structured communication between frontend and backend |
+| 🗄️ **Database** | Relational Database | Stores users, trips, stops, activities, and expenses |
+
+---
+
+## 🎨 UI/UX Design System
+
+Traveloop uses a thoughtfully crafted design system built to make the user experience both **functional and emotionally engaging**.
+
+### 🎨 Color Palette
+
+| Swatch | Color Name | Hex | Usage |
+|:------:|:-----------|:----|:------|
+| 🔵 | Ocean Blue | `#2563eb` | Primary actions, links, and trust-building elements |
+| 🟠 | Warm Coral | `#f97316` | Call-to-action buttons and highlights |
+| ⚪ | Crisp Slate | `#f8fafc` | Backgrounds — keeps the interface light and breathable |
+| ⚫ | Deep Charcoal | `#1e293b` | Text and high-contrast elements |
+| 🟢 | Success Green | `#22c55e` | Confirmations, packed items, within-budget indicators |
+| 🔴 | Alert Red | `#ef4444` | Over-budget warnings and error states |
+
+### ✍️ Typography & Layout
+- **Tabular numerals** are used in all budget and cost screens for clean decimal alignment
+- **Card-based layouts** group related information cleanly across all screens
+- **Progressive disclosure** — complex data is hidden behind expandable sections to avoid overwhelming users
+- **Consistent spacing** following an 8px grid system throughout the application
+
+---
+
+## ⚙️ Local Installation
+
+> 🛠️ Want to run **Traveloop** locally on your machine? Follow the steps below:
+
+**Prerequisites:**
+- Node.js (v18 or later)
+- npm or pnpm
+
+```bash
+# 1️⃣  Clone the repository
+git clone https://github.com/Vector3451/ODOOXKAHE.git
+
+# 2️⃣  Navigate into the project directory
+cd ODOOXKAHE
+
+# 3️⃣  Install all dependencies
+npm install
+
+# 4️⃣  Start the development server
+npm run dev
+```
+
+Once started, open your browser and visit:
+
+```
+http://localhost:5173
+```
+
+> ⚙️ If you encounter any issues with dependencies, try clearing the cache:
+> ```bash
+> npm install --force
+> ```
+
+---
+
+## 🗺️ Mockup / Wireframe
+
+> 🎨 View the full interactive UI mockup and wireframe for all screens here:
+
+<div align="center">
+
+**👉 [Open Excalidraw Mockup](https://link.excalidraw.com/l/65VNwvy7c4X/22o30WE3bE4)**
+
+</div>
+
+The mockup covers all 14 screens, showing the layout, navigation flow, and component placement across both desktop and mobile views.
+
+---
+
+## 👥 The Team
+
+<div align="center">
+
+> 🏆 Built with passion and dedication for the **Odoo × KAHE Coimbatore Hackathon '26**
+
+*A team of developers and designers committed to making travel planning seamless, intelligent, and delightful.*
+
+<br/>
+
+| Role | Responsibility |
+|:-----|:---------------|
+| 🧑‍💻 Frontend Developer | React UI, component architecture, responsive layouts |
+| 🧑‍💻 Backend Developer | API design, database schema, Odoo integration |
+| 🎨 UI/UX Designer | Design system, wireframes, user experience flows |
+| 📊 Data Analyst | Budget logic, analytics dashboard, cost modeling |
+
+</div>
+
+---
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:f97316,100:1a6bb5&height=130&section=footer&animation=fadeIn" width="100%"/>
+
+<br/>
+
+**⭐ If Traveloop impressed you, drop a star — it means the world to our team! ⭐**
+
+<br/>
+
+![Made with Love](https://img.shields.io/badge/Made_with-❤️-red?style=for-the-badge)
+![Hackathon](https://img.shields.io/badge/Odoo_×_KAHE-Hackathon_'26-714B67?style=for-the-badge&logo=odoo)
+![Built with React](https://img.shields.io/badge/Built_with-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+
+</div>
