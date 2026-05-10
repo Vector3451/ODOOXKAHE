@@ -6,4 +6,8 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  server: {
+    port: 5173,
+    strictPort: true, // fail loudly instead of silently picking another port (avoids CORS mismatches)
+  },
 });
