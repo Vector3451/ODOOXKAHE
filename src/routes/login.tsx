@@ -50,6 +50,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +124,7 @@ function LoginPage() {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <button className="font-semibold text-primary hover:text-primary-hover transition-colors">Sign up</button>
+              <Link to="/register" className="font-semibold text-primary hover:text-primary-hover transition-colors">Sign up</Link>
             </p>
           </div>
         </div>

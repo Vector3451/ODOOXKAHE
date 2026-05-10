@@ -65,7 +65,7 @@ def register(data: dict):
     if User.query.filter_by(email=email).first():
         return {'error': 'An account with that email already exists'}, 409
 
-    pw_hash = generate_password_hash(password, method='bcrypt')[:60]  # bcrypt = 60 chars
+    pw_hash = generate_password_hash(password, method='pbkdf2:sha256')
     user = User(
         name=name,
         email=email,
@@ -241,7 +241,7 @@ def reset_password(data: dict):
     if user.password_reset_expires_at < datetime.utcnow():
         return {'error': 'Token has expired'}, 400
 
-    user.password_hash = generate_password_hash(new_password, method='bcrypt')[:60]
+    user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
     user.password_reset_token = None
     user.password_reset_expires_at = None
 

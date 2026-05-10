@@ -26,14 +26,20 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ["profile"],
-    queryFn: authAPI.getProfile,
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const res = await authAPI.getProfile();
+      return res.user ?? res;
+    },
   });
 
   const { data: allTrips } = useQuery({
-    queryKey: ["trips"],
-    queryFn: tripAPI.getAll,
+    queryKey: ['trips'],
+    queryFn: async () => {
+      const res = await tripAPI.getAll();
+      return res.trips ?? [];
+    },
   });
 
   if (isLoading) {
@@ -46,37 +52,41 @@ function ProfilePage() {
     );
   }
 
+  const profile = profileData;
   const user = {
-    name: profile?.name || "User",
-    email: profile?.email || "",
-    phone: profile?.phone || "Not provided",
-    city: profile?.city || "Unknown",
-    country: profile?.country || "Earth",
-    joinDate: profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Recently",
-    tripsCount: allTrips?.length || 0,
-    countriesCount: [...new Set(allTrips?.map((t: any) => t.country) || [])].length,
-    totalSpent: `$${allTrips?.reduce((sum: number, t: any) => sum + (t.budget || 0), 0).toLocaleString()}`,
+    name:         profile?.name || 'User',
+    email:        profile?.email || '',
+    phone:        'Not provided',
+    city:         'Unknown',
+    country:      'Earth',
+    joinDate:     profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Recently',
+    tripsCount:   allTrips?.length || 0,
+    countriesCount: 0,
+    totalSpent:   `$${(allTrips ?? []).reduce((sum: number, t: any) => sum + (t.budget || 0), 0).toLocaleString()}`,
   };
 
-  const preplannedTrips = allTrips?.filter((t: any) => t.status === "upcoming" || t.status === "planning") || [];
-  const previousTrips = allTrips?.filter((t: any) => t.status === "completed") || [];
+  const preplannedTrips = (allTrips ?? []).filter((t: any) => t.status === 'planning' || t.status === 'upcoming');
+  const previousTrips   = (allTrips ?? []).filter((t: any) => t.status === 'completed');
 
   const statusMeta: Record<string, { color: string; icon: typeof Clock }> = {
-    Upcoming: { color: "bg-primary/10 text-primary", icon: Plane },
-    Planning: { color: "bg-accent/15 text-accent", icon: Bookmark },
-    Completed: { color: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
-    upcoming: { color: "bg-primary/10 text-primary", icon: Plane },
-    planning: { color: "bg-accent/15 text-accent", icon: Bookmark },
-    completed: { color: "bg-emerald-100 text-emerald-700", icon: CheckCircle2 },
+    active:    { color: "bg-primary/10 text-primary",      icon: Plane },
+    planning:  { color: "bg-accent/15 text-accent",         icon: Bookmark },
+    completed: { color: "bg-emerald-100 text-emerald-700",  icon: CheckCircle2 },
+    cancelled: { color: "bg-muted text-muted-foreground",   icon: CheckCircle2 },
+    // legacy aliases
+    Upcoming:  { color: "bg-primary/10 text-primary",      icon: Plane },
+    Planning:  { color: "bg-accent/15 text-accent",         icon: Bookmark },
+    Completed: { color: "bg-emerald-100 text-emerald-700",  icon: CheckCircle2 },
+    upcoming:  { color: "bg-primary/10 text-primary",      icon: Plane },
   };
 
   function TripCard({ trip }: { trip: any }) {
     const meta = statusMeta[trip.status] ?? statusMeta.Planning;
     const StatusIcon = meta.icon;
     return (
-      <Link to="/itinerary-builder/$tripId" params={{ tripId: trip.id }} className="group rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden hover:shadow-elevated transition-all block">
+      <Link to="/itinerary-builder/$tripId" params={{ tripId: String(trip.id) }} className="group rounded-2xl bg-card border border-border/60 shadow-card overflow-hidden hover:shadow-elevated transition-all block">
         <div className="relative h-40 overflow-hidden">
-          <img src={trip.image || santorini} alt={trip.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={trip.coverImage || santorini} alt={trip.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <span className={`absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-semibold inline-flex items-center gap-1 ${meta.color} bg-surface/95`}>
             <StatusIcon className="h-3 w-3" /> {trip.status}
           </span>

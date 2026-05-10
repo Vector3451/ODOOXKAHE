@@ -27,19 +27,24 @@ export const Route = createFileRoute("/trips")({
 
 type TripStatus = "ongoing" | "upcoming" | "completed";
 
-const statusMeta = {
-  ongoing: { label: "Ongoing", icon: Plane, color: "text-primary bg-primary/10", dot: "bg-primary" },
-  upcoming: { label: "Up-coming", icon: Bookmark, color: "text-accent bg-accent/10", dot: "bg-accent" },
-  completed: { label: "Completed", icon: CheckCircle2, color: "text-emerald-700 bg-emerald-100", dot: "bg-emerald-500" },
+const statusMeta: Record<string, { label: string; icon: typeof Plane; color: string; dot: string }> = {
+  // schema v4 statuses
+  active:    { label: "Ongoing",   icon: Plane,        color: "text-primary bg-primary/10",        dot: "bg-primary" },
+  planning:  { label: "Planning",  icon: Bookmark,     color: "text-accent bg-accent/10",           dot: "bg-accent" },
+  completed: { label: "Completed", icon: CheckCircle2, color: "text-emerald-700 bg-emerald-100",    dot: "bg-emerald-500" },
+  cancelled: { label: "Cancelled", icon: CheckCircle2, color: "text-muted-foreground bg-muted",     dot: "bg-muted-foreground" },
+  // legacy aliases
+  ongoing:   { label: "Ongoing",   icon: Plane,        color: "text-primary bg-primary/10",        dot: "bg-primary" },
+  upcoming:  { label: "Up-coming", icon: Bookmark,     color: "text-accent bg-accent/10",           dot: "bg-accent" },
 };
 
 function TripRow({ trip }: { trip: any }) {
   const meta = statusMeta[trip.status as TripStatus] || statusMeta.upcoming;
   const Icon = meta.icon;
   return (
-    <Link to="/itinerary-builder/$tripId" params={{ tripId: trip.id }} className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-card hover:shadow-elevated hover:border-primary/30 transition-all">
+    <Link to="/itinerary-builder/$tripId" params={{ tripId: String(trip.id) }} className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 shadow-card hover:shadow-elevated hover:border-primary/30 transition-all">
       <div className="relative h-16 w-20 shrink-0 rounded-xl overflow-hidden">
-        <img src={trip.image || santorini} alt={trip.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        <img src={trip.coverImage || santorini} alt={trip.title} loading="lazy" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
@@ -105,8 +110,11 @@ function TripsListPage() {
   const [activeTab, setActiveTab] = useState<TripStatus | "all">("all");
 
   const { data: allTrips, isLoading } = useQuery({
-    queryKey: ["trips"],
-    queryFn: tripAPI.getAll,
+    queryKey: ['trips'],
+    queryFn: async () => {
+      const res = await tripAPI.getAll();
+      return res.trips ?? [];
+    },
   });
 
   const tabs: { key: TripStatus | "all"; label: string }[] = [
@@ -127,9 +135,10 @@ function TripsListPage() {
   }
 
   const trips = allTrips || [];
-  const ongoingTrips = trips.filter((t: any) => t.status === "ongoing");
-  const upcomingTrips = trips.filter((t: any) => t.status === "upcoming");
-  const completedTrips = trips.filter((t: any) => t.status === "completed");
+  // Backend statuses: planning, upcoming, active, completed
+  const ongoingTrips   = trips.filter((t: any) => t.status === 'active' || t.status === 'ongoing');
+  const upcomingTrips  = trips.filter((t: any) => t.status === 'planning' || t.status === 'upcoming');
+  const completedTrips = trips.filter((t: any) => t.status === 'completed');
 
   return (
     <AppShell>

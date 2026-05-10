@@ -29,13 +29,12 @@ function Builder() {
 
   useEffect(() => {
     if (tripData?.trip) {
-      const dests = tripData.trip.destinations ? tripData.trip.destinations.split(',') : ["New Destination"];
-      setStops(dests.map((d: string, i: number) => ({
-        id: i + 1,
-        city: d.trim(),
-        country: "",
-        days: 3
-      })));
+      const tripObj = tripData.trip;
+      // Use destinations string or default
+      const dests = tripObj.destinations
+        ? tripObj.destinations.split(',').map((d: string) => d.trim())
+        : [tripObj.title || 'New Destination'];
+      setStops(dests.map((city: string, i: number) => ({ id: i + 1, city, country: '', days: 3 })));
       setActive(1);
     }
   }, [tripData]);
@@ -56,9 +55,9 @@ function Builder() {
   return (
     <AppShell>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">{trip.title || "Untitled Trip"}</h1>
+        <h1 className="text-3xl font-bold text-foreground">{trip.title || 'Untitled Trip'}</h1>
         <p className="mt-1.5 text-muted-foreground inline-flex items-center gap-2">
-          <Calendar className="h-4 w-4" /> {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : "TBD"} — {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : "TBD"} · {stops.length} cities
+          <Calendar className="h-4 w-4" /> {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : 'TBD'} — {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : 'TBD'} · {stops.length} cities
         </p>
       </div>
 

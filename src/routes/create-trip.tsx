@@ -40,16 +40,15 @@ function CreateTrip() {
     setLoading(true);
     try {
       const res = await tripAPI.create({
-        title: name,
-        description: desc,
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
-        destinations: "", // To be filled in later
+        title:       name,
+        destinations: desc,
+        startDate:   start ? start.toISOString().split('T')[0] : null,
+        endDate:     end   ? end.toISOString().split('T')[0]   : null,
       });
-      queryClient.invalidateQueries({ queryKey: ["trips"] });
-      nav({ to: "/itinerary-builder/$tripId", params: { tripId: res.trip.id } });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      nav({ to: '/itinerary-builder/$tripId', params: { tripId: String(res.trip.id) } });
     } catch (error: any) {
-      alert(error.message || "Failed to create trip");
+      alert(error.message || 'Failed to create trip');
     } finally {
       setLoading(false);
     }
