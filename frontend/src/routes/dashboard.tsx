@@ -11,6 +11,8 @@ import bali from "@/assets/dest-bali.jpg";
 import paris from "@/assets/dest-paris.jpg";
 import tokyo from "@/assets/dest-tokyo.jpg";
 import newyork from "@/assets/dest-newyork.jpg";
+import { tripAPI, cityAPI } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -22,20 +24,28 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-const recentTrips = [
-  { name: "Santorini Escape", dates: "Jun 12 – Jun 19", img: santorini, status: "Upcoming" },
-  { name: "Iceland Aurora Hunt", dates: "Sep 03 – Sep 11", img: iceland, status: "Planning" },
-  { name: "Bali Retreat", dates: "Mar 02 – Mar 14", img: bali, status: "Completed" },
-];
-
-const destinations = [
-  { name: "Paris", country: "France", img: paris },
-  { name: "Tokyo", country: "Japan", img: tokyo },
-  { name: "New York", country: "USA", img: newyork },
-  { name: "Bali", country: "Indonesia", img: bali },
-];
 
 function Dashboard() {
+  const { data: tripData } = useQuery({ queryKey: ["trips"], queryFn: () => tripAPI.getAll() });
+  const { data: cityData } = useQuery({ queryKey: ["cities"], queryFn: () => cityAPI.getAll() });
+
+  const recentTrips = (tripData?.trips || []).slice(0, 3).map((t: any) => ({
+    id: t.id,
+    name: t.title,
+    dates: `${t.startDate?.split('T')[0] || ''} - ${t.endDate?.split('T')[0] || ''}`,
+    img: t.coverImage || iceland,
+    status: t.status
+  }));
+
+  const destinations = (cityData?.cities || []).slice(0, 4).map((c: any) => ({
+    name: c.name,
+    country: c.country,
+    img: c.image || paris
+  }));
+
+  const userStr = typeof window !== "undefined" ? localStorage.getItem('user') : null;
+  const user = userStr ? JSON.parse(userStr) : { name: "Explorer" };
+
   return (
     <AppShell>
       {/* Hero */}
@@ -47,7 +57,7 @@ function Dashboard() {
             <div className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 backdrop-blur px-3 py-1 text-xs font-medium">
               <Sparkles className="h-3.5 w-3.5" /> Ready for your next adventure
             </div>
-            <h1 className="mt-3 text-3xl sm:text-4xl font-bold leading-tight">Welcome back, Alex 👋</h1>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-bold leading-tight">Welcome back, {user.name.split(' ')[0]} 👋</h1>
             <p className="mt-2 text-primary-foreground/85 max-w-lg text-sm sm:text-base">
               You have 1 upcoming trip in 23 days. Let's make it unforgettable.
             </p>
@@ -62,9 +72,9 @@ function Dashboard() {
 
       {/* Budget widgets */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <BudgetCard icon={Wallet} label="Total Spent This Year" value="$4,820" sub="across 3 trips" tone="primary" />
-        <BudgetCard icon={TrendingUp} label="Upcoming Trip Budget" value="$2,400" sub="Santorini Escape" tone="accent" />
-        <BudgetCard icon={Calendar} label="Days Until Next Trip" value="23" sub="Jun 12, 2026" tone="muted" />
+        <BudgetCard icon={Wallet} label="Total Spent This Year" value={`$${tripData?.trips?.reduce((acc: number, t: any) => acc + (t.totalBudget || 0), 0).toLocaleString() || 0}`} sub={`across ${tripData?.total || 0} trips`} tone="primary" />
+        <BudgetCard icon={TrendingUp} label="Upcoming Trip Budget" value={`$${tripData?.trips?.filter((t: any) => t.status === 'upcoming').reduce((acc: number, t: any) => acc + (t.totalBudget || 0), 0).toLocaleString() || 0}`} sub="Upcoming trips" tone="accent" />
+        <BudgetCard icon={Calendar} label="Days Until Next Trip" value="--" sub="Schedule your next adventure" tone="muted" />
       </section>
 
       {/* Spending Trend */}

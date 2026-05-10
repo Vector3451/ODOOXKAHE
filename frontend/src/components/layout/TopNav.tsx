@@ -25,7 +25,7 @@ export function TopNav() {
     window.location.href = '/login';
   };
 
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem('user') || 'null') : null;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-surface/80 backdrop-blur supports-[backdrop-filter]:bg-surface/70">

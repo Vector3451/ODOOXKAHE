@@ -1,11 +1,13 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from models import db, User, Trip, City, CommunityPost
+from models import db, User, Trip, City, CommunityPost, Expense
 from routes.auth import auth_bp
 from routes.trips import trips_bp
 from routes.cities import cities_bp
 from routes.community import community_bp
+from routes.admin import admin_bp
+from routes.ai import ai_bp
 import os
 
 app = Flask(__name__)
@@ -26,6 +28,8 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(trips_bp, url_prefix='/api/trips')
 app.register_blueprint(cities_bp, url_prefix='/api/cities')
 app.register_blueprint(community_bp, url_prefix='/api/community')
+app.register_blueprint(admin_bp, url_prefix='/api/admin')
+app.register_blueprint(ai_bp, url_prefix='/api/ai')
 
 @app.route('/')
 def home():
@@ -37,6 +41,21 @@ def home():
 @app.route('/health')
 def health():
     return jsonify({"status": "ok", "message": "Flask Traveloop API is running"})
+
+@app.route('/api/stats')
+def get_stats():
+    # Public stats for the landing page
+    total_trips = Trip.query.count()
+    total_countries = City.query.with_entities(City.country).distinct().count()
+    total_users = User.query.count()
+    total_posts = CommunityPost.query.count()
+    
+    return jsonify({
+        "trips": total_trips,
+        "countries": total_countries,
+        "users": total_users,
+        "posts": total_posts
+    }), 200
 
 def seed_database():
     if User.query.first() is not None:
@@ -78,6 +97,17 @@ def seed_database():
     ]
     db.session.add_all(posts)
     db.session.commit()
+    
+    # Create dummy expenses for the first trip
+    expenses = [
+        Expense(trip_id=trips[0].id, date="Jun 12", description="Flights: SFO → ATH (Round trip)", category="Transport", city="San Francisco", unit_cost=980, qty=1),
+        Expense(trip_id=trips[0].id, date="Jun 12", description="Hotel Oia Palace — 4 nights", category="Accommodation", city="Santorini", unit_cost=280, qty=4),
+        Expense(trip_id=trips[0].id, date="Jun 13", description="Sunset Catamaran Cruise", category="Activity", city="Santorini", unit_cost=95, qty=2),
+        Expense(trip_id=trips[0].id, date="Jun 14", description="Fine Dining at Ammoudi Bay", category="Food", city="Santorini", unit_cost=120, qty=1),
+    ]
+    db.session.add_all(expenses)
+    db.session.commit()
+
     print("Database seeded successfully!")
 
 with app.app_context():

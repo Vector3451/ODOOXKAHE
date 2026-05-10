@@ -50,6 +50,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{email?: string, password?: string}>({});
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
