@@ -1,5 +1,40 @@
 <div align="center">
 
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1a6bb5,100:f97316&height=220&section=header&text=✈️%20Traveloop&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=40&desc=Personalized%20Travel%20Planning%20Made%20Easy&descAlignY=62&descAlign=50&descSize=22" width="100%"/>
+
+<!-- ── ANIMATED TAGLINE ─────────────────────────────────────────── -->
+<br/>
+
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=5BA4CF&background=00000000&center=true&vCenter=true&multiline=false&repeat=true&width=550&height=40&lines=Dream+it.+Plan+it.+Live+it.+✈️;Multi-City+Travel%2C+Reimagined.+🌍;Your+Journey%2C+Your+Rules.+🗺️)](https://git.io/typing-svg)
+
+<br/>
+
+<!-- ── TECH BADGES ──────────────────────────────────────────────── -->
+![](https://img.shields.io/badge/🏆_Hackathon-Odoo_×_KAHE_'26-714B67?style=for-the-badge)
+![](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![](https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white)
+![](https://img.shields.io/badge/Status-Active-22c55e?style=for-the-badge)
+
+<br/>
+
+<!-- ── SOCIAL BADGES ────────────────────────────────────────────── -->
+[![Stars](https://img.shields.io/github/stars/Vector3451/ODOOXKAHE?style=social)](https://github.com/Vector3451/ODOOXKAHE/stargazers)
+[![Forks](https://img.shields.io/github/forks/Vector3451/ODOOXKAHE?style=social)](https://github.com/Vector3451/ODOOXKAHE/network)
+[![Watchers](https://img.shields.io/github/watchers/Vector3451/ODOOXKAHE?style=social)](https://github.com/Vector3451/ODOOXKAHE/watchers)
+
+<br/>
+
+> ### *"Making travel planning as exciting as the journey itself."*
+> **Traveloop** is an intelligent, end-to-end travel planning platform — empowering users to **dream**, **design**, **organize**, and **share** multi-city journeys, all in one seamless experience.
+
+</div>
+
+---
+
+<div align="center">
+
 ## 📖 Contents
 
 [🌐 Vision](#-overall-vision) · [🎯 Mission](#-mission) · [❗ Problem](#-problem-statement) · [📱 Platform](#-platform-support) · [✨ Features](#-application-screens--features) · [🗄️ Database](#%EF%B8%8F-database-architecture) · [🛠️ Stack](#%EF%B8%8F-tech-stack) · [🎨 Design](#-uiux-design-system) · [⚙️ Setup](#%EF%B8%8F-local-installation) · [🗺️ Mockup](#%EF%B8%8F-mockup--wireframe) · [👥 Team](#-the-team)
