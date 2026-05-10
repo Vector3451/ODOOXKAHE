@@ -1,11 +1,6 @@
-<!--  ═══════════════════════════════════════════════════════════════  -->
-<!--                       TRAVELOOP  README                         -->
-<!--  ═══════════════════════════════════════════════════════════════  -->
-
 <div align="center">
 
-<!-- ── HERO BANNER ─────────────────────────────────────────────── -->
-<img src="https://capsule-render.vercel.app/api?type=cylinder&color=gradient&customColorList=12,20,24&height=220&section=header&text=TRAVELOOP&fontSize=80&fontColor=fff&animation=fadeIn&fontAlignY=55&desc=✈️%20%20Personalized%20Travel%20Planning%20Made%20Easy&descAlignY=78&descSize=18&descColor=c9d6df" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1a6bb5,100:f97316&height=220&section=header&text=✈️%20Traveloop&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=40&desc=Personalized%20Travel%20Planning%20Made%20Easy&descAlignY=62&descAlign=50&descSize=22" width="100%"/>
 
 <!-- ── ANIMATED TAGLINE ─────────────────────────────────────────── -->
 <br/>
