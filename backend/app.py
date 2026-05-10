@@ -11,17 +11,24 @@ from routes.community import community_bp
 from routes.admin import admin_bp
 from routes.ai import ai_bp
 import os
+from dotenv import load_dotenv
+
+# Load .env from the same directory as app.py
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 app = Flask(__name__)
 
-# Configuration
-basedir = os.path.abspath(os.path.dirname(__name__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dev.db')
+# Configuration — all values read from .env (see .env.example)
+basedir = os.path.abspath(os.path.dirname(__file__))
+_db_url = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(basedir, "dev.db")}')
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'super-secret-key-change-in-production'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev-insecure-key-change-before-deploy')
 
-# Initialize extensions
-CORS(app)
+# CORS — allow origins from env (comma-separated) or all in dev
+_cors_origins = os.environ.get('CORS_ORIGINS', '*')
+_origins = [o.strip() for o in _cors_origins.split(',')] if _cors_origins != '*' else '*'
+CORS(app, origins=_origins)
 db.init_app(app)
 jwt = JWTManager(app)
 

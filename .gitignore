@@ -35,8 +35,19 @@ dist-ssr
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Virtual environments
 venv/
 env/
-.env
-dev.db
 .venv/
+backend/venv/
+
+# Environment variables — NEVER commit actual .env files
+.env
+backend/.env
+# .env.example files are safe to commit (they contain no secrets)
+
+# SQLite databases — each developer gets their own local copy
+*.db
+dev.db
+backend/dev.db

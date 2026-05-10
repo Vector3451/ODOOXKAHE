@@ -1,5 +1,6 @@
 // API utility for integrating with the Traveloop Flask backend
-const API_URL = 'http://localhost:5000/api';
+// Set VITE_API_URL in .env to change the backend host (see .env.example)
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
