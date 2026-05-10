@@ -483,4 +483,3 @@ Open your browser at **`http://localhost:5173`**
 ![React](https://img.shields.io/badge/Powered%20by-React%20+%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=20232A)
 
 </div>
->>>>>>> main
