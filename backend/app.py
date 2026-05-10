@@ -1,7 +1,9 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from models import db, User, Trip, City, CommunityPost, Expense
+from models import (db, User, UserSession, Trip, Destination, Activity,
+                    Booking, Expense, PackingItem, TripNote,
+                    SavedDestination, AuditLog, City, CommunityPost)
 from routes.auth import auth_bp
 from routes.trips import trips_bp
 from routes.cities import cities_bp
