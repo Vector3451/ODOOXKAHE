@@ -35,16 +35,7 @@ const categoryMeta: Record<Category, { icon: typeof Camera; color: string; label
   stay: { icon: Hotel, color: "text-violet-600 bg-violet-100", label: "Accommodation" },
 };
 
-const allActivities = [
-  { id: "a1", title: "Eiffel Tower Skip-the-Line", city: "Paris", country: "France", cost: 65, rating: 4.9, category: "sight" as Category, image: paris, duration: "3 hrs" },
-  { id: "a2", title: "Sushi Omakase Dinner", city: "Tokyo", country: "Japan", cost: 120, rating: 4.8, category: "food" as Category, image: tokyo, duration: "2 hrs" },
-  { id: "a3", title: "Sunset Catamaran Cruise", city: "Santorini", country: "Greece", cost: 95, rating: 4.9, category: "sight" as Category, image: santorini, duration: "4 hrs" },
-  { id: "a4", title: "Ubud Rice Terrace Tour", city: "Bali", country: "Indonesia", cost: 40, rating: 4.7, category: "sight" as Category, image: bali, duration: "5 hrs" },
-  { id: "a5", title: "Broadway Show: Hamilton", city: "New York", country: "USA", cost: 180, rating: 4.9, category: "sight" as Category, image: newyork, duration: "3 hrs" },
-  { id: "a6", title: "Northern Lights Tour", city: "Reykjavik", country: "Iceland", cost: 85, rating: 4.8, category: "sight" as Category, image: iceland, duration: "4 hrs" },
-  { id: "a7", title: "Le Comptoir du Relais", city: "Paris", country: "France", cost: 55, rating: 4.6, category: "food" as Category, image: paris, duration: "1.5 hrs" },
-  { id: "a8", title: "Tokyo Subway Day Pass", city: "Tokyo", country: "Japan", cost: 12, rating: 4.5, category: "transport" as Category, image: tokyo, duration: "All day" },
-];
+
 
 const cities = ["All Cities", "Paris", "Tokyo", "Santorini", "Bali", "New York", "Reykjavik"];
 const categories = ["All Types", "Sightseeing", "Food & Dining", "Transport", "Accommodation"];
@@ -61,8 +52,8 @@ function SearchPage() {
   const [added, setAdded] = useState<Set<string>>(new Set());
 
   const { data: cityData, isLoading } = useQuery({
-    queryKey: ["cities"],
-    queryFn: () => cityAPI.getAll(),
+    queryKey: ["cities", query],
+    queryFn: () => query ? cityAPI.search(query) : cityAPI.getAll(),
   });
 
   const allDestinations = (cityData?.cities || []).map((c: any) => ({
@@ -87,7 +78,6 @@ function SearchPage() {
   };
 
   const filtered = allDestinations.filter((a: any) => {
-    if (query && !a.title.toLowerCase().includes(query.toLowerCase()) && !a.city.toLowerCase().includes(query.toLowerCase())) return false;
     if (cityFilter !== "All Cities" && a.city !== cityFilter) return false;
     const catMap: Record<string, Category | ""> = {
       "Sightseeing": "sight", "Food & Dining": "food", "Transport": "transport", "Accommodation": "stay",

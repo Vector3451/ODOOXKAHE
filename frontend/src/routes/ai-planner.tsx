@@ -19,29 +19,8 @@ export const Route = createFileRoute("/ai-planner")({
 const styles = ["Relaxed", "Adventurous", "Cultural", "Foodie", "Luxury", "Budget"];
 const interests = ["Beaches", "Hiking", "Museums", "Nightlife", "Photography", "Local food", "Wellness", "Shopping"];
 
-const mockItinerary = [
-  {
-    day: 1,
-    city: "Santorini",
-    title: "Arrival & Oia Sunset",
-    activities: [
-      { time: "14:00", title: "Check-in at Cliffside Villa", cost: 0, type: "Stay" },
-      { time: "16:00", title: "Explore Oia Village", cost: 0, type: "Sight" },
-      { time: "19:00", title: "Dinner with Caldera View", cost: 85, type: "Food" },
-    ]
-  },
-  {
-    day: 2,
-    city: "Santorini",
-    title: "Volcano & Hot Springs",
-    activities: [
-      { time: "10:00", title: "Boat Tour to Nea Kameni", cost: 50, type: "Adventure" },
-      { time: "13:00", title: "Swim in Palea Kameni Hot Springs", cost: 0, type: "Wellness" },
-      { time: "18:00", title: "Wine Tasting in Pyrgos", cost: 65, type: "Cultural" },
-    ]
-  }
-];
-
+import { aiAPI } from "@/lib/api";
+import { toast } from "sonner";
 function AIPlannerPage() {
   const [destination, setDestination] = useState("Santorini, Greece");
   const [budget, setBudget] = useState(3000);
@@ -51,13 +30,24 @@ function AIPlannerPage() {
   const [generating, setGenerating] = useState(false);
   const [itinerary, setItinerary] = useState<any[] | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setGenerating(true);
     setItinerary(null);
-    setTimeout(() => {
+    try {
+      const res = await aiAPI.generate({
+        destination,
+        budget,
+        days,
+        style,
+        interests: pickedInterests
+      });
+      setItinerary(res.itinerary);
+      toast.success(res.summary || "Itinerary generated!");
+    } catch (error) {
+      toast.error("Failed to generate itinerary. Please try again.");
+    } finally {
       setGenerating(false);
-      setItinerary(mockItinerary);
-    }, 2500);
+    }
   };
 
   return (
@@ -267,7 +257,7 @@ function DayCard({ day, index }: { day: any; index: number }) {
                       <span className="text-xs font-bold text-foreground">{act.cost > 0 ? `$${act.cost}` : "Free"}</span>
                     </div>
                     <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-widest border border-border/50">
-                      {act.type}
+                      {act.location || act.type || "Activity"}
                     </span>
                   </div>
                 </div>

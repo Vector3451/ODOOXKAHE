@@ -9,6 +9,8 @@ import santorini from "@/assets/trip-santorini.jpg";
 import bali from "@/assets/dest-bali.jpg";
 import paris from "@/assets/dest-paris.jpg";
 import tokyo from "@/assets/dest-tokyo.jpg";
+import { publicAPI } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,12 +22,7 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
-const stats = [
-  { value: "1.2M+", label: "Trips planned" },
-  { value: "180+", label: "Countries" },
-  { value: "4.9★", label: "Avg rating" },
-  { value: "98%", label: "Loved it" },
-];
+
 
 const features = [
   { icon: Sparkles, title: "AI itineraries", desc: "Day-by-day plans tailored to your style, pace and budget — generated in seconds." },
@@ -37,7 +34,19 @@ const features = [
 ];
 
 function LandingPage() {
-  const token = localStorage.getItem("token");
+  const { data: statsData } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => publicAPI.getStats(),
+  });
+
+  const stats = [
+    { value: statsData?.trips || 0, label: "Trips planned" },
+    { value: statsData?.countries || 0, label: "Countries" },
+    { value: statsData?.users || 0, label: "Travelers" },
+    { value: statsData?.posts || 0, label: "Memories Shared" },
+  ];
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   
   if (token) {
     return <Navigate to="/dashboard" />;

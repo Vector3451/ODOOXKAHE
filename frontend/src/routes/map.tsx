@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Layers, Navigation, MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { useQuery } from "@tanstack/react-query";
+import { cityAPI } from "@/lib/api";
 
 export const Route = createFileRoute("/map")({
   head: () => ({
@@ -14,16 +16,32 @@ export const Route = createFileRoute("/map")({
   component: MapPage,
 });
 
-const points = [
-  { id: "santorini", name: "Santorini", lat: 36.3932, lng: 25.4615 },
-  { id: "paris", name: "Paris", lat: 48.8566, lng: 2.3522 },
-  { id: "tokyo", name: "Tokyo", lat: 35.6762, lng: 139.6503 },
-  { id: "bali", name: "Bali", lat: -8.3405, lng: 115.0920 },
-  { id: "iceland", name: "Reykjavík", lat: 64.1466, lng: -21.9426 },
-];
+const CITY_COORDS: Record<string, { lat: number, lng: number }> = {
+  "Santorini": { lat: 36.3932, lng: 25.4615 },
+  "Paris": { lat: 48.8566, lng: 2.3522 },
+  "Tokyo": { lat: 35.6762, lng: 139.6503 },
+  "Bali": { lat: -8.3405, lng: 115.0920 },
+  "Reykjavik": { lat: 64.1466, lng: -21.9426 },
+  "New York": { lat: 40.7128, lng: -74.0060 }
+};
 
 function MapPage() {
   const [Leaflet, setLeaflet] = useState<any>(null);
+
+  const { data: cityData } = useQuery({
+    queryKey: ["cities"],
+    queryFn: () => cityAPI.getAll(),
+  });
+
+  const points = (cityData?.cities || [])
+    .filter((c: any) => CITY_COORDS[c.name])
+    .map((c: any) => ({
+      id: c.id.toString(),
+      name: c.name,
+      lat: CITY_COORDS[c.name].lat,
+      lng: CITY_COORDS[c.name].lng,
+      image: c.image
+    }));
 
   useEffect(() => {
     Promise.all([
@@ -40,6 +58,23 @@ function MapPage() {
       setLeaflet(rl);
     });
   }, []);
+
+  let totalDistance = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = points[i];
+    const p2 = points[i+1];
+    const R = 6371; // Earth's radius in km
+    const dLat = (p2.lat - p1.lat) * (Math.PI/180);
+    const dLon = (p2.lng - p1.lng) * (Math.PI/180);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(p1.lat * (Math.PI/180)) * Math.cos(p2.lat * (Math.PI/180)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    totalDistance += R * c;
+  }
+  
+  const percentage = totalDistance > 0 ? ((totalDistance / 40075) * 100).toFixed(1) : "0";
 
   return (
     <AppShell>
@@ -75,13 +110,14 @@ function MapPage() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <Leaflet.Polyline 
-                  positions={points.map(p => [p.lat, p.lng])} 
+                  positions={points.map((p: any) => [p.lat, p.lng])} 
                   pathOptions={{ color: "#2563eb", weight: 2, dashArray: "5, 10" }} 
                 />
-                {points.map(p => (
+                {points.map((p: any) => (
                   <Leaflet.Marker key={p.id} position={[p.lat, p.lng]}>
                     <Leaflet.Popup>
-                      <div className="p-1">
+                      <div className="p-1 min-w-[150px]">
+                        {p.image && <img src={p.image} className="w-full h-24 object-cover rounded-lg mb-2" alt={p.name} />}
                         <p className="font-bold text-slate-900 mb-0.5">{p.name}</p>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Saved Destination</p>
                       </div>
@@ -95,10 +131,14 @@ function MapPage() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest px-1">Recent Pinned</h3>
             <div className="space-y-3">
-              {points.map(p => (
+              {points.map((p: any) => (
                 <div key={p.id} className="group p-3 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-3">
-                   <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                     <MapPin className="h-5 w-5" />
+                   <div className="h-10 w-10 rounded-xl overflow-hidden shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+                     {p.image ? (
+                       <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                     ) : (
+                       <div className="w-full h-full bg-blue-50 text-blue-600 flex items-center justify-center"><MapPin className="h-5 w-5" /></div>
+                     )}
                    </div>
                    <div className="flex-1 min-w-0">
                      <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
@@ -109,8 +149,8 @@ function MapPage() {
             </div>
             <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
                <h4 className="font-bold text-sm">Distance Tracked</h4>
-               <p className="text-2xl font-black mt-1">12,482 <span className="text-xs font-medium opacity-80">km</span></p>
-               <p className="text-[10px] opacity-80 mt-2 leading-relaxed">You've traveled 42% of the world's circumference this year!</p>
+               <p className="text-2xl font-black mt-1">{Math.round(totalDistance).toLocaleString()} <span className="text-xs font-medium opacity-80">km</span></p>
+               <p className="text-[10px] opacity-80 mt-2 leading-relaxed">You've traveled {percentage}% of the world's circumference this year!</p>
             </div>
           </div>
         </div>

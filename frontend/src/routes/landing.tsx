@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Search, SlidersHorizontal, MapPin, Star, ArrowRight,
-  Calendar, Clock, TrendingUp, Compass,
+  Calendar, Clock, TrendingUp, Compass, Camera
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import santorini from "@/assets/trip-santorini.jpg";
 import iceland from "@/assets/trip-iceland.jpg";
 
 import { tripAPI } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/landing")({
   head: () => ({
@@ -41,6 +41,8 @@ function LandingPage() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeBudget, setActiveBudget] = useState("Any Budget");
+  const [newPostContent, setNewPostContent] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: allTrips, isLoading: loadingTrips } = useQuery({
     queryKey: ["trips"],
@@ -52,12 +54,25 @@ function LandingPage() {
     queryFn: communityAPI.getPosts,
   });
 
+  const createPostMutation = useMutation({
+    mutationFn: communityAPI.createPost,
+    onSuccess: () => {
+      setNewPostContent("");
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    }
+  });
+
   const { data: cities, isLoading: loadingCities } = useQuery({
     queryKey: ["trending-cities"],
     queryFn: () => cityAPI.getAll({ limit: 5 }),
   });
 
   const recentTrips = (allTrips || []).slice(0, 3);
+  
+  // Filter top regional based on active category
+  const filteredRegional = activeCategory === "All" 
+    ? topRegional 
+    : topRegional.filter(d => d.category.includes(activeCategory) || activeCategory.includes(d.category.split(' ')[0]));
 
   return (
     <AppShell>
@@ -95,13 +110,16 @@ function LandingPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && (window.location.href = `/search?q=${search}`)}
               placeholder="Search destinations, cities, activities..."
               className="w-full h-11 rounded-xl border border-input bg-surface pl-9 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/15"
             />
           </div>
-          <Button variant="outline" className="h-11 px-4 rounded-xl border-border gap-2">
-            <SlidersHorizontal className="h-4 w-4" /> Filters
-          </Button>
+          <Link to="/search">
+            <Button variant="outline" className="h-11 px-4 rounded-xl border-border gap-2">
+              <SlidersHorizontal className="h-4 w-4" /> Filters
+            </Button>
+          </Link>
         </div>
 
         {/* Category pills */}
@@ -143,38 +161,42 @@ function LandingPage() {
             <h2 className="text-xl font-bold text-foreground">Top Regional Selections</h2>
             <p className="text-sm text-muted-foreground mt-0.5">Handpicked destinations trending this season</p>
           </div>
-          <button className="text-sm font-medium text-primary hover:text-primary-hover inline-flex items-center gap-1 transition-colors">
+          <Link to="/search" className="text-sm font-medium text-primary hover:text-primary-hover inline-flex items-center gap-1 transition-colors">
             View all <ArrowRight className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
 
         {/* Horizontal scroll grid */}
         <div className="-mx-4 sm:mx-0">
           <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto px-4 sm:px-0 pb-2 snap-x">
-            {topRegional.map((dest) => (
-              <article
-                key={dest.name}
-                className="group min-w-[200px] sm:min-w-0 snap-start rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-all cursor-pointer"
-              >
-                <div className="relative h-52 overflow-hidden">
-                  <img src={dest.img} alt={dest.name} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-                  <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-surface/90 backdrop-blur px-2 py-0.5 text-xs font-semibold">
-                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {dest.rating}
+            {filteredRegional.map((dest) => (
+              <Link to="/search" key={dest.name} className="block group min-w-[200px] sm:min-w-0 snap-start rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-all cursor-pointer">
+                <article>
+                  <div className="relative h-52 overflow-hidden">
+                    <img src={dest.img} alt={dest.name} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+                    <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-surface/90 backdrop-blur px-2 py-0.5 text-xs font-semibold">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {dest.rating}
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 p-4 text-primary-foreground">
+                      <p className="text-[10px] font-medium uppercase tracking-wider opacity-75 inline-flex items-center gap-1">
+                        <MapPin className="h-3 w-3" /> {dest.country}
+                      </p>
+                      <h3 className="text-lg font-bold mt-0.5">{dest.name}</h3>
+                      <p className="text-xs opacity-75 mt-0.5">{dest.category}</p>
+                      <button className="mt-2 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-surface/20 backdrop-blur text-primary-foreground px-3 py-1 hover:bg-accent hover:text-accent-foreground transition-colors">
+                        Explore <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 p-4 text-primary-foreground">
-                    <p className="text-[10px] font-medium uppercase tracking-wider opacity-75 inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {dest.country}
-                    </p>
-                    <h3 className="text-lg font-bold mt-0.5">{dest.name}</h3>
-                    <p className="text-xs opacity-75 mt-0.5">{dest.category}</p>
-                    <button className="mt-2 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-surface/20 backdrop-blur text-primary-foreground px-3 py-1 hover:bg-accent hover:text-accent-foreground transition-colors">
-                      Explore <ArrowRight className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              </article>
+                </article>
+              </Link>
             ))}
+            {filteredRegional.length === 0 && (
+              <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed border-border rounded-2xl">
+                No destinations found for this category.
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -194,6 +216,41 @@ function LandingPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Posts column */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* Create Post Form */}
+            <div className="rounded-2xl bg-card border border-border/60 shadow-card p-4">
+              <div className="flex gap-3">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-bold text-sm">
+                  U
+                </div>
+                <div className="flex-1 space-y-3">
+                  <textarea 
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    placeholder="Share your latest travel story..." 
+                    className="w-full min-h-[80px] bg-transparent text-sm resize-none outline-none placeholder:text-muted-foreground"
+                  />
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                    <button className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-primary/5">
+                      <Camera className="h-4 w-4" />
+                    </button>
+                    <Button 
+                      onClick={() => {
+                        if (newPostContent.trim()) {
+                          createPostMutation.mutate({ content: newPostContent.trim() });
+                        }
+                      }}
+                      disabled={createPostMutation.isPending || !newPostContent.trim()}
+                      size="sm" 
+                      className="bg-primary hover:bg-primary-hover text-primary-foreground rounded-xl"
+                    >
+                      {createPostMutation.isPending ? "Posting..." : "Post Story"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {loadingPosts ? (
               [1, 2].map(i => <div key={i} className="h-96 rounded-2xl bg-muted animate-pulse" />)
             ) : posts?.posts?.length === 0 ? (
@@ -217,7 +274,7 @@ function LandingPage() {
                   </div>
                 )}
                 <div className="p-5">
-                  <p className="text-sm text-foreground leading-relaxed">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                     {p.content}
                   </p>
                   <div className="mt-4 flex items-center gap-4">
