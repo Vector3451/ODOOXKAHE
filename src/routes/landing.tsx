@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Search, SlidersHorizontal, MapPin, Star, ArrowRight,
-  Calendar, Clock, TrendingUp, Compass,
+  Calendar, Clock, TrendingUp, Compass, Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import newyork from "@/assets/dest-newyork.jpg";
 import santorini from "@/assets/trip-santorini.jpg";
 import iceland from "@/assets/trip-iceland.jpg";
 
-import { tripAPI } from "@/lib/api";
+import { tripAPI, communityAPI, cityAPI } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/landing")({
@@ -57,7 +57,7 @@ function LandingPage() {
     queryFn: () => cityAPI.getAll({ limit: 5 }),
   });
 
-  const recentTrips = (allTrips || []).slice(0, 3);
+  const recentTrips = (allTrips?.trips || []).slice(0, 3);
 
   return (
     <AppShell>
@@ -283,5 +283,3 @@ function LandingPage() {
   );
 }
 
-import { communityAPI, cityAPI } from "@/lib/api";
-import { Sparkles } from "lucide-react";
